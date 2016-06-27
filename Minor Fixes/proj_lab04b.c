@@ -1,10 +1,3 @@
-// **************************************************************************
-/*Patten Studio
- *all code is code
- *
- */
-
-// the includes
 #include <math.h>
 #include "main.h"
 
@@ -31,7 +24,7 @@
 #define REMOTE_NEGATIVE_THRESHOLD  _IQ(2.0) //asking what out of 0.4 to 23.5 is considered negative speed (so 0.4 to 3.5 is now negative speed or break)  ** changed 3.5 to 2.0
 #define REMOTE_FORWAR_THRESHOLD  _IQ(8.0) //#ifdef FLASH
 #pragma CODE_SECTION(mainISR,"ramfuncs");
-#endifso only values above 8 get used for forward speed control. 8.1 is basically translated to 0.1 speed, times scaler ** changed 8.0 to 9.5
+#endif so only values above 8 get used for forward speed control. 8.1 is basically translated to 0.1 speed, times scaler ** changed 8.0 to 9.5
 #define MAXIMUM_SPEED_KRPM   _IQ(5.6)
 #define REMOTE_COMMAND_SCALER  _IQ((float_t)5.6/(23.5 - 8.0))  //substituting de-IQed numbers from above. max speed 5.6, highest incoming value 23.5, remte_forward_threshold 8.0
 
@@ -202,7 +195,7 @@ extern Uint16 RamfuncsLoadStart, RamfuncsLoadEnd, RamfuncsRunStart;
 #ifdef DRV8301_SPI
 // Watch window interface to the 8301 SPI
 DRV_SPI_8301_Vars_t gDrvSpi8301VarsA;
-DRV_SPI_8301_Vars_t gDrvSpi8301VarsB;
+DRV_SPI_8301_Vars_t gDrvSpi8301VarsB; // Dual Motor Setup
 #endif
 
 _iq gFlux_pu_to_Wb_sf;
@@ -256,10 +249,26 @@ __interrupt void WAKE_ISR(void);    // ISR for WAKEINT, not actually sure this h
 //////////////////////////////////////////////////////MAIN************************************************************************************************************* 
 void main(void)
 {
-initPowerPins(); //battery connection setup need to be done right away
-memCopy((uint16_t *)&RamfuncsLoadStart,(uint16_t *)&RamfuncsLoadEnd,(uint16_t *)&RamfuncsRunStart); //need for time delay functions
-initAll(); //Starts GPIO, SCI, LEDS, System control
-initBatStatus(); //setup leds on the display board, and turn them all ON
+  initPowerPins(); //battery connection setup need to be done right away
+  memCopy((uint16_t *)&RamfuncsLoadStart,(uint16_t *)&RamfuncsLoadEnd,(uint16_t *)&RamfuncsRunStart); //need for time delay functions
+  initAll(); //Starts GPIO, SCI, LEDS, System control
+  initBatStatus(); //setup leds on the display board, and turn them all ON
+
+/*   uint_least8_t estNumber = 0;
+
+#ifdef FAST_ROM_V1p6
+  uint_least8_t ctrlNumber = 0;
+#endif
+
+  // Only used if running from FLASH
+  // Note that the variable FLASH is defined by the project
+  #ifdef FLASH
+  // Copy time critical code and Flash setup code to RAM
+  // The RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
+  // symbols are created by the linker. Refer to the linker files.
+  memCopy((uint16_t *)&RamfuncsLoadStart,(uint16_t *)&RamfuncsLoadEnd,(uint16_t *)&RamfuncsRunStart);
+  #endif
+*/
 
   // initialize the hardware abstraction layer
   halHandle = HAL_init(&hal,sizeof(hal));
@@ -297,7 +306,7 @@ initBatStatus(); //setup leds on the display board, and turn them all ON
 
   // initialize the controller////////////  
 #ifdef FAST_ROM_V1p6
-  ctrlHandleB = CTRL_initCtrl(1,1);     //v1p6 format (06xF and 06xM devices)
+  ctrlHandleB = CTRL_initCtrl(1,1);     //v1p6 format (06xF and 06xM devices) (ctrlNumber, estNumber)
   controller_objB = (CTRL_Obj *)ctrlHandleB;
   ctrlHandleA = CTRL_initCtrl(0,0);     //v1p6 format (06xF and 06xM devices)
   controller_objA = (CTRL_Obj *)ctrlHandleA;
@@ -308,9 +317,11 @@ initBatStatus(); //setup leds on the display board, and turn them all ON
   {
     CTRL_Version versionA;
     CTRL_Version versionB;
+
     // get the version number
     CTRL_getVersion(ctrlHandleA,&versionA);
     gMotorVarsA.CtrlVersion = versionA;
+
     CTRL_getVersion(ctrlHandleB,&versionB);
     gMotorVarsB.CtrlVersion = versionB;
   }
@@ -365,15 +376,13 @@ initBatStatus(); //setup leds on the display board, and turn them all ON
   // enable global interrupts
   HAL_enableGlobalInts(halHandle);
 
-
   // enable debug interrupts
   HAL_enableDebugInt(halHandle);
-
 
   // disable the PWM
   HAL_disablePwm(halHandle);
 
-// CAN WE FIND A BETER PLACE FOR THIS? ///////////////////////////////////////////////////
+
   //now that interrupts are enabled, do some battery management, awkwardly placed here to avoid using too many delays for visual ques and make startup as fast as possible
   	delayMSinterrupt(600);
   	batteryAhEstimator(); //reads voltage on the current battery and determines Ah
@@ -382,20 +391,25 @@ initBatStatus(); //setup leds on the display board, and turn them all ON
     sendString("ATMD\r"); //go to data mode after updating battery
 
 
-//#ifdef DRV8301_SPI
+#ifdef DRV8301_SPI
   // turn on the DRV8301 if present
-  HAL_enableDrv(halHandle,0);  // -jp
-  HAL_enableDrv(halHandle,1);  // -jp
+  HAL_enableDrv(halHandle,0);  
+  HAL_enableDrv(halHandle,1); 
 
   // initialize the DRV8301 interface
   HAL_setupDrvSpi(halHandle,&gDrvSpi8301VarsA,0);
-  HAL_setupDrvSpi(halHandle,&gDrvSpi8301VarsB,1); // - jp
-// NOT SURE IF CODE HERE IS RUNNING OR JUST FOR SHOW, HAVE TO DOUBLE CHECK
-//#endif
+  HAL_setupDrvSpi(halHandle,&gDrvSpi8301VarsB,1);
+#endif
+
 
   // enable DC bus compensation
   CTRL_setFlag_enableDcBusComp(ctrlHandleA, true);
   CTRL_setFlag_enableDcBusComp(ctrlHandleB, true);
+
+
+
+
+
 
   // compute scaling factors for flux and torque calculations
   gFlux_pu_to_Wb_sf = USER_computeFlux_pu_to_Wb_sf();
@@ -405,7 +419,7 @@ initBatStatus(); //setup leds on the display board, and turn them all ON
 
 
 
-  //////////////////////////////////////////////////////////////LK, one time set up things before forever loop
+  //////////////////////////////////////////////////////////////Set up things before forever loop
 
   /* All of these have been written into main.h but keep these here for referrence
   gMotorVarsA.Flag_enableRsRecalc = true;
@@ -1022,7 +1036,6 @@ if (to10thsec_counter > (USER_ISR_FREQ_Hz *0.1)) // 10 times per sec
 instead of the above method which samples the last 10 readings to create an average, it is possibly to simply multiply the runing average value by 0.9, the newest value by 0.1 and add up the total.
 This  method is computationally much simpler, but can in some cases behave quite differently. The sampling method has completely new data every one second. The running average method is affected by high values for a very long time.
 for instance if the running average is 10amps, and then 0 current is drawn, after 1 sec, the average is calculated at 3.5amps, 1.2 amps after 2 seconds. .42 after 3 seconds
-
 back_motorI_newest = _IQdiv(back_motorkW, gMotorVarsA.VdcBus_kV); //divide kW by kV to get I
 back_motorI_average = _IQmpy(back_motorI_average, _IQ(0.9) + _IQmpy(back_motorI_newest, _IQ(0.1)
 */
@@ -2328,12 +2341,10 @@ void getOrientation() //this funciton does nothing in expert mode
 	{
 		front_motor_index = 1;
 	}
-
 	else if (orientation_sensor_val < 800)
 	{
 		front_motor_index = 2;
 	}
-
 }
 */
 
@@ -2735,3 +2746,5 @@ __interrupt void WAKE_ISR(void)
 
 
 
+Status API Training Shop Blog About
+© 2016 GitHub, Inc. Terms Privacy Security Contact Help
