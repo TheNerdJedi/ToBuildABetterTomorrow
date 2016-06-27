@@ -465,7 +465,7 @@ void main(void)
     CTRL_setFlag_enableSpeedCtrl(ctrlHandleB, true);
 
     // loop while the enable system flag is true
-    while(gMotorVarsB.Flag_enableSys && gMotorVarsA.Flag_enableSys)
+    while(gMotorVarsA.Flag_enableSys && gMotorVarsB.Flag_enableSys)
     {
 
       CTRL_Obj *objA = (CTRL_Obj *)ctrlHandleA;
@@ -488,17 +488,18 @@ void main(void)
 
         if(CTRL_isError(ctrlHandleB) || CTRL_isError(ctrlHandleA))
           {
-            // set the enable controller flag to false
-            CTRL_setFlag_enableCtrl(ctrlHandleA,false);
-            CTRL_setFlag_enableCtrl(ctrlHandleB,false);
+              // set the enable controller flag to false
+              CTRL_setFlag_enableCtrl(ctrlHandleA,false);
+              CTRL_setFlag_enableCtrl(ctrlHandleB,false);
 
-            // set the enable system flag to false
-            gMotorVarsA.Flag_enableSys = false;
-            gMotorVarsB.Flag_enableSys = false;
+              // set the enable system flag to false
+              gMotorVarsA.Flag_enableSys = false;
+              gMotorVarsB.Flag_enableSys = false;
 
-            // disable the PWM
-            HAL_disablePwm(halHandle);
+             // disable the PWM
+              HAL_disablePwm(halHandle);
           }
+
         else
           {
             // update the controller state
@@ -513,12 +514,13 @@ void main(void)
             if(flag_ctrlStateChangedA)
               {
                 CTRL_State_e ctrlState = CTRL_getState(ctrlHandleA);
+
                 if(ctrlState == CTRL_State_OffLine)
                   {
                     // enable the PWM
                    // HAL_enablePwm(halHandle); //now done at interrupt for flying start
                   }
-                else if(ctrlState == CTRL_State_OnLine)
+                if(ctrlState == CTRL_State_OnLine)
                   {
 
                     if(gMotorVarsA.Flag_enableOffsetcalc == true)
@@ -714,7 +716,15 @@ void main(void)
          {
             gNumFreqErrorsB = FEM_getErrorCnt(femHandleB);
           }
+        
+        // update CPU usage
+        updateCPUusage(ctrlHandle);
 
+        // enable/disable the forced angle
+        EST_setFlag_enableForceAngle(obj->estHandle,gMotorVars.Flag_enableForceAngle);
+
+        // enable or disable power warp
+        CTRL_setFlag_enablePowerWarp(ctrlHandle,gMotorVars.Flag_enablePowerWarp);
 
 //////////////except for variables, Custom LEIF code begins here ///////////////////////////////////////////////////////////////////////////////////////
 
