@@ -2743,7 +2743,6 @@ void ftoa(unsigned char *buf, float f) {
   }
 }
 
-
 __interrupt void WAKE_ISR(void)
 {
    //GpioDataRegs.GPATOGGLE.bit.GPIO1 = 1;  // Toggle GPIO1 in the ISR - monitored with oscilloscope
