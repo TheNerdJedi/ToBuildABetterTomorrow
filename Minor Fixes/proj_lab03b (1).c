@@ -503,105 +503,51 @@ interrupt void mainISR(void)
 } // end of mainISR() function
 
 
-void updateGlobalVariables_motorA(CTRL_Handle handle)
+void updateGlobalVariables_motor(CTRL_Handle handle)
 {
   CTRL_Obj *obj = (CTRL_Obj *)handle;
 
   // get the speed estimate
-  gMotorVarsA.Speed_krpm = EST_getSpeed_krpm(obj->estHandle);
+  gMotorVars.Speed_krpm = EST_getSpeed_krpm(obj->estHandle);
 
   // get the real time speed reference coming out of the speed trajectory generator
-  gMotorVarsA.SpeedTraj_krpm = _IQmpy(CTRL_getSpd_int_ref_pu(handle),EST_get_pu_to_krpm_sf(obj->estHandle));
+  gMotorVars.SpeedTraj_krpm = _IQmpy(CTRL_getSpd_int_ref_pu(handle),EST_get_pu_to_krpm_sf(obj->estHandle));
 
   // get the torque estimate
-  gMotorVarsA.Torque_Nm = USER_computeTorque_Nm(handle, gTorque_Flux_Iq_pu_to_Nm_sf, gTorque_Ls_Id_Iq_pu_to_Nm_sf);
+  gMotorVars.Torque_Nm = USER_computeTorque_Nm(handle, gTorque_Flux_Iq_pu_to_Nm_sf, gTorque_Ls_Id_Iq_pu_to_Nm_sf);
 
   // get the magnetizing current
-  gMotorVarsA.MagnCurr_A = EST_getIdRated(obj->estHandle);
+  gMotorVars.MagnCurr_A = EST_getIdRated(obj->estHandle);
 
   // get the rotor resistance
-  gMotorVarsA.Rr_Ohm = EST_getRr_Ohm(obj->estHandle);
+  gMotorVars.Rr_Ohm = EST_getRr_Ohm(obj->estHandle);
 
   // get the stator resistance
-  gMotorVarsA.Rs_Ohm = EST_getRs_Ohm(obj->estHandle);
+  gMotorVars.Rs_Ohm = EST_getRs_Ohm(obj->estHandle);
 
   // get the stator inductance in the direct coordinate direction
-  gMotorVarsA.Lsd_H = EST_getLs_d_H(obj->estHandle);
+  gMotorVars.Lsd_H = EST_getLs_d_H(obj->estHandle);
 
   // get the stator inductance in the quadrature coordinate direction
-  gMotorVarsA.Lsq_H = EST_getLs_q_H(obj->estHandle);
+  gMotorVars.Lsq_H = EST_getLs_q_H(obj->estHandle);
 
   // get the flux in V/Hz in floating point
-  gMotorVarsA.Flux_VpHz = EST_getFlux_VpHz(obj->estHandle);
+  gMotorVars.Flux_VpHz = EST_getFlux_VpHz(obj->estHandle);
 
   // get the flux in Wb in fixed point
-  gMotorVarsA.Flux_Wb = USER_computeFlux(handle, gFlux_pu_to_Wb_sf);
+  gMotorVars.Flux_Wb = USER_computeFlux(handle, gFlux_pu_to_Wb_sf);
 
   // get the controller state
-  gMotorVarsA.CtrlState = CTRL_getState(handle);
+  gMotorVars.CtrlState = CTRL_getState(handle);
 
   // get the estimator state
-  gMotorVarsA.EstState = EST_getState(obj->estHandle);
+  gMotorVars.EstState = EST_getState(obj->estHandle);
 
   // Get the DC buss voltage
-  gMotorVarsA.VdcBus_kV = _IQmpy(gAdcData.dcBus,_IQ(USER_IQ_FULL_SCALE_VOLTAGE_V/1000.0));
+  gMotorVars.VdcBus_kV = _IQmpy(gAdcData.dcBus,_IQ(USER_IQ_FULL_SCALE_VOLTAGE_V/1000.0));
 
   return;
-} // end of updateGlobalVariables_motorA() function
-
-void updateGlobalVariables_motorB(CTRL_Handle handle)
-{
-  CTRL_Obj *obj = (CTRL_Obj *)handle;
-
-  // get the speed estimate
-  gMotorVarsB.Speed_krpm = EST_getSpeed_krpm(obj->estHandle);
-
-  // get the real time speed reference coming out of the speed trajectory generator
-  gMotorVarsB.SpeedTraj_krpm = _IQmpy(CTRL_getSpd_int_ref_pu(handle),EST_get_pu_to_krpm_sf(obj->estHandle));
-
-  // get the torque estimate
-  gMotorVarsB.Torque_Nm = USER_computeTorque_Nm(handle, gTorque_Flux_Iq_pu_to_Nm_sf, gTorque_Ls_Id_Iq_pu_to_Nm_sf);
-
-  // get the magnetizing current
-  gMotorVarsB.MagnCurr_A = EST_getIdRated(obj->estHandle);
-
-  // get the rotor resistance
-  gMotorVarsB.Rr_Ohm = EST_getRr_Ohm(obj->estHandle);
-
-  // get the stator resistance
-  gMotorVarsB.Rs_Ohm = EST_getRs_Ohm(obj->estHandle);
-
-  // get the stator inductance in the direct coordinate direction
-  gMotorVarsB.Lsd_H = EST_getLs_d_H(obj->estHandle);
-
-  // get the stator inductance in the quadrature coordinate direction
-  gMotorVarsB.Lsq_H = EST_getLs_q_H(obj->estHandle);
-
-  // get the flux in V/Hz in floating point
-  gMotorVarsB.Flux_VpHz = EST_getFlux_VpHz(obj->estHandle);
-
-  // get the flux in Wb in fixed point
-  gMotorVarsB.Flux_Wb = USER_computeFlux(handle, gFlux_pu_to_Wb_sf);
-
-  // get the controller state
-  gMotorVarsB.CtrlState = CTRL_getState(handle);
-
-  // get the estimator state
-  gMotorVarsB.EstState = EST_getState(obj->estHandle);
-
-  // Get the DC buss voltage
-  gMotorVarsB.VdcBus_kV = _IQmpy(gAdcData.dcBus,_IQ(USER_IQ_FULL_SCALE_VOLTAGE_V/1000.0));
-
-  return;
-} // end of updateGlobalVariables_motorB() function
-
-
-
-
-
-
-
-
+} // end of updateGlobalVariables_motor() function
 
 
 void updateCPUusage(CTRL_Handle handle)
@@ -623,7 +569,6 @@ void updateCPUusage(CTRL_Handle handle)
 
   return;
 } // end of updateCPUusage() function
-
 
 /////////These functions are only used for debug
 void sendStringU(unsigned char s[])
