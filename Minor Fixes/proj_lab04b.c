@@ -2460,7 +2460,7 @@ void updateGlobalVariables_motorB(CTRL_Handle handle)
 {
   CTRL_Obj *obj = (CTRL_Obj *)handle;
 
-  gMotorVarsA.ForceAngleStatus = EST_getForceAngleStatus(obj->estHandle);
+  gMotorVarsB.ForceAngleStatus = EST_getForceAngleStatus(obj->estHandle);
   // get the speed estimate
   gMotorVarsB.Speed_krpm = EST_getSpeed_krpm(obj->estHandle);
 
@@ -2753,8 +2753,3 @@ __interrupt void WAKE_ISR(void)
 
 //@} //defgroup
 // end of file
-
-
-
-Status API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Contact Help
