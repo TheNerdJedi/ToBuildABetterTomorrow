@@ -410,6 +410,33 @@ void main(void)
 
 } // end of main() function
 
+void captureUART() //sciB version
+{
+  if (ScibRegs.SCIRXST.bit.RXRDY) //looking for receive flag
+  {
+    //RX_flag = true;// i think this should be commented out???? Feb 17th!! XXX
+    char temp_char = ScibRegs.SCIRXBUF.all; //read RX register
+    if (temp_char!= '\n') //ignore all '\n'
+    {
+      my_buffer[my_i] = temp_char;
+      if(my_buffer[my_i]=='\r' )  // probably end of viable command, ok to look at now
+      {
+        RX_flag = true;        //Set String received flag
+        my_buffer[my_i]='\0';   // replace \r with string terminator \0
+        my_i=0;
+      }
+      else{my_i++;}
+
+      if (my_i > MY_BUFFER_LEN - 2) // maybe missed the \r, try to process the buffer, but more importantly reset the buffer to avoid overrun
+      {
+        RX_flag = true;
+        my_buffer[MY_BUFFER_LEN - 1]='\0';
+        my_i=0;
+      }
+    }
+  }
+}
+
 
 interrupt void mainISR(void)
 {
@@ -469,8 +496,6 @@ interrupt void mainISR(void)
 } // end of mainISR() function
 
 // TI Functions
-
-
 void updateGlobalVariables_motorA(CTRL_Handle handle)
 {
   CTRL_Obj *obj = (CTRL_Obj *)handle;
