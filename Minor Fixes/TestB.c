@@ -10,16 +10,28 @@
 #endif
 
 // Include header files used in the main function
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <file.h>
+#include "DSP28x_Project.h"
+#include "sci_io.h"
+
 
 
 // **************************************************************************
 // the defines
 
-#define LED_BLINK_FREQ_Hz   5
 
+#define LED_BLINK_FREQ_Hz   5
+#pragma CODE_SECTION(mainISR,"ramfuncs");
 
 // **************************************************************************
 // the globals
+
+
 
 uint_least16_t gCounter_updateGlobals = 0;
 
