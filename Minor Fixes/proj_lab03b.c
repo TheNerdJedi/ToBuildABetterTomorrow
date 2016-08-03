@@ -24,7 +24,7 @@
 #define REMOTE_NEGATIVE_THRESHOLD  _IQ(2.0) //asking what out of 0.4 to 23.5 is considered negative speed (so 0.4 to 3.5 is now negative speed or break)  ** changed 3.5 to 2.0
 #define REMOTE_FORWAR_THRESHOLD  _IQ(8.0) //#ifdef FLASH
 #pragma CODE_SECTION(mainISR,"ramfuncs");
-#endif // so only values above 8 get used for forward speed control. 8.1 is basically translated to 0.1 speed, times scaler ** changed 8.0 to 9.5
+#endif so only values above 8 get used for forward speed control. 8.1 is basically translated to 0.1 speed, times scaler ** changed 8.0 to 9.5
 #define MAXIMUM_SPEED_KRPM   _IQ(5.6)
 #define REMOTE_COMMAND_SCALER  _IQ((float_t)5.6/(23.5 - 8.0))  //substituting de-IQed numbers from above. max speed 5.6, highest incoming value 23.5, remte_forward_threshold 8.0
 
@@ -772,6 +772,7 @@ void main(void)
 
 
 ///////////////////////////////////////////////  BOARD ORIENTATION, USER level Mode, and part of POWER handling
+
 front_motor_index = getOrientation(); //checks the orientation of the motor. Default is 1.
 
  // User modes are 1, 2, 3 
@@ -1087,7 +1088,8 @@ else if (back_motorI_average > _IQ(7.0) && back_power_limit < _IQmpy(back_motorI
 		// result of the above statements is that we remain at what ever power we reach untill dropping all the way back down to < 6amps.
 		// this ensures that during times of heavy use, a short low demand moment doesnt result in loss of need power setting
 
-////////////////////////PURELY for debugg and recording purposes
+
+//////////////////////////////////////////////////////////////////////PURELY for debugg and recording purposes
 
 if (gMotorVarsA.Speed_krpm > speed_record)
 		{
